@@ -27,7 +27,7 @@ class Roadrunner(data.Dataset):
 
     def __init__(self, opt, split):
         super().__init__()
-        name = self.__class__.__name__
+        name = self.__class__.__name__.lower()
         self.data_dir = os.path.join(opt.data_dir, name)
         self.img_dir = os.path.join(self.data_dir, split)
         self.annot_path = os.path.join(self.data_dir, f"{split}.json")
