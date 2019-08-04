@@ -6,16 +6,16 @@ Questions
   * _eig_vec
 """
 
-import pycocotools.coco as coco
-from pycocotools.cocoeval import COCOeval
-import numpy as np
 import json
 import os
+import numpy as np
+import pycocotools.coco as coco
+from pycocotools.cocoeval import COCOeval
+from torch.utils.data import Dataset
 
-import torch.utils.data as data
 
-# change the class name, class attributes, and tthe lines with "#@" on them
-class Roadrunner(data.Dataset):
+# change the class name and class attributes
+class Roadrunner(Dataset):
     num_classes = 3
     default_resolution = [210, 160]
     mean = np.array([0.41204423, 0.30953058, 0.27727498], dtype=np.float32).reshape(
@@ -24,15 +24,18 @@ class Roadrunner(data.Dataset):
     std = np.array([0.43140923, 0.30728389, 0.29881408], dtype=np.float32).reshape(
         1, 1, 3
     )
+    class_name = ["roadrunner", "coyote", "car"]
+    max_objs = 10
+    # it seems you can't use the class name because a new Dataset class is created
+    # dynamically that subclasses this one and a sample dataset for the task, so
+    # the class name ends up being "dataset" if you try that
+    name = "roadrunner"  # self.__class__.__name__.lower()
 
     def __init__(self, opt, split):
         super().__init__()
-        name = self.__class__.__name__.lower()
-        self.data_dir = os.path.join(opt.data_dir, name)
+        self.data_dir = os.path.join(opt.data_dir, self.name)
         self.img_dir = os.path.join(self.data_dir, split)
         self.annot_path = os.path.join(self.data_dir, f"{split}.json")
-        self.max_objs = 10  # @
-        self.class_name = ["roadrunner", "coyote", "car"]  # @
         self._valid_ids = list(range(1, len(self.class_name) + 1))
         self.cat_ids = {v: i for i, v in enumerate(self._valid_ids)}
         self.voc_color = [
@@ -53,7 +56,7 @@ class Roadrunner(data.Dataset):
         self.split = split
         self.opt = opt
 
-        print(f"==> initializing {name} {split} data.")
+        print(f"==> initializing {self.name} {split} data.")
         self.coco = coco.COCO(self.annot_path)
         self.images = self.coco.getImgIds()
         self.num_samples = len(self.images)
